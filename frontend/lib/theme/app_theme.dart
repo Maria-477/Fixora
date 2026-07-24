@@ -14,10 +14,7 @@ class AppTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(double.infinity, 56),
-        textStyle: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w500,
-        ),
+        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
       ),
     ),
   );
@@ -35,10 +32,7 @@ class AppTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(double.infinity, 56),
-        textStyle: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w500,
-        ),
+        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
       ),
     ),
   );
