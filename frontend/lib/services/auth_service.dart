@@ -53,6 +53,9 @@ class AuthService {
           'password': password,
         },
       );
+      
+      print("LOGIN RESPONSE:");
+      print(response.data);
 
       return AuthResult(
         success: true,

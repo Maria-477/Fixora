@@ -25,10 +25,34 @@ class WorkerDashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Center(
-        child: Text(
-          'Welcome, worker (phone: ${user?.phone ?? ""})\nVoice registration comes in Milestone 9',
-          textAlign: TextAlign.center,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Welcome, ${user?.fullName ?? "Worker"}!',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'Phone: ${user?.phone ?? ""}',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+
+              const SizedBox(height: 32),
+
+              ElevatedButton(
+                onPressed: () {
+                  context.push('/worker/voice-registration');
+                },
+                child: const Text('Set up my profile'),
+              ),
+            ],
+          ),
         ),
       ),
     );
