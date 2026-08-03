@@ -2,7 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiClient {
-  static const String baseUrl = 'http://192.168.9.171:8000';
+  static const String baseUrl = 'http://192.168.0.172:8000';
+
+  static String imageUrl(String relativePath) => '$baseUrl$relativePath';
 
   final Dio dio = Dio(
     BaseOptions(
@@ -16,18 +18,19 @@ class ApiClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-        final isPublicEndpoint = options.path.contains('/auth/');
-        if (!isPublicEndpoint) {
-          const storage = FlutterSecureStorage();
-          final token = await storage.read(key: 'access_token');
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
+          final isPublicEndpoint = options.path.contains('/auth/');
+          if (!isPublicEndpoint) {
+            const storage = FlutterSecureStorage();
+            final token = await storage.read(key: 'access_token');
+            if (token != null) {
+              options.headers['Authorization'] = 'Bearer $token';
+            }
           }
-        }
-        return handler.next(options);
-       },
+          return handler.next(options);
+        },
       ),
     );
+
     dio.interceptors.add(
       LogInterceptor(
         request: true,

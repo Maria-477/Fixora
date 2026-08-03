@@ -41,6 +41,8 @@ dependencies:
   flutter_secure_storage: ^10.3.1
   speech_to_text: ^7.4.0
   permission_handler: ^12.0.3
+  image_picker: ^1.2.3
+  geolocator: ^14.0.3
 
 dev_dependencies:
   flutter_test:

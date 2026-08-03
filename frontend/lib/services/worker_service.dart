@@ -45,4 +45,13 @@ class WorkerService {
       return false;
     }
   }
+
+  Future<WorkerDetails?> getWorkerDetails(int workerId) async {
+  try {
+    final response = await _dio.get('/workers/$workerId');
+    return WorkerDetails.fromJson(response.data);
+  } on DioException {
+    return null;
+  }
+ }
 }

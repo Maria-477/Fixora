@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/worker_models.dart';
+import '../../providers/worker_profile_provider.dart';
 import '../../services/worker_service.dart';
 
-class ProfileConfirmScreen extends StatefulWidget {
+class ProfileConfirmScreen extends ConsumerStatefulWidget {
   final ExtractedProfile extracted;
 
   const ProfileConfirmScreen({
@@ -13,12 +15,12 @@ class ProfileConfirmScreen extends StatefulWidget {
   });
 
   @override
-  State<ProfileConfirmScreen> createState() =>
+  ConsumerState<ProfileConfirmScreen> createState() =>
       _ProfileConfirmScreenState();
 }
 
 class _ProfileConfirmScreenState
-    extends State<ProfileConfirmScreen> {
+    extends ConsumerState<ProfileConfirmScreen> {
   late TextEditingController _nameController;
   late TextEditingController _cityController;
   late TextEditingController _experienceController;
@@ -50,6 +52,15 @@ class _ProfileConfirmScreenState
     );
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _cityController.dispose();
+    _experienceController.dispose();
+    _bioController.dispose();
+    super.dispose();
+  }
+
   Future<void> _confirm() async {
     setState(() {
       _isSaving = true;
@@ -70,6 +81,7 @@ class _ProfileConfirmScreenState
     });
 
     if (success && mounted) {
+      ref.invalidate(workerProfileProvider);
       context.go('/home');
     } else {
       setState(() {
@@ -151,8 +163,7 @@ class _ProfileConfirmScreenState
               const SizedBox(height: 24),
 
               ElevatedButton(
-                onPressed:
-                    _isSaving ? null : _confirm,
+                onPressed: _isSaving ? null : _confirm,
                 child: _isSaving
                     ? const CircularProgressIndicator()
                     : const Text('Confirm and Save'),

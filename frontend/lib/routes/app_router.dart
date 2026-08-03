@@ -4,14 +4,27 @@ import '../screens/worker/profile_confirm_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../providers/auth_provider.dart';
+
 import '../screens/splash/splash_screen.dart';
 import '../screens/language/language_selection_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/auth/otp_screen.dart';
+
 import '../screens/home/customer_home_screen.dart';
 import '../screens/home/worker_dashboard_screen.dart';
+
+import '../screens/worker/portfolio_screen.dart';
+
+import '../screens/search/worker_search_screen.dart';
+import '../screens/search/worker_details_screen.dart';
+
+import '../screens/shared/set_location_screen.dart';
+
+import '../screens/booking/create_booking_screen.dart';
+import '../screens/booking/my_bookings_screen.dart';
 
 class HomeRouterScreen extends ConsumerWidget {
   const HomeRouterScreen({super.key});
@@ -83,6 +96,51 @@ final appRouter = GoRouter(
       path: '/worker/confirm-profile',
       builder: (context, state) => ProfileConfirmScreen(
         extracted: state.extra as ExtractedProfile,
+      ),
+    ),
+
+    GoRoute(
+      path: '/worker/portfolio',
+      builder: (context, state) => const PortfolioScreen(),
+    ),
+
+    GoRoute(
+      path: '/customer/search',
+      builder: (context, state) => const WorkerSearchScreen(),
+    ),
+
+    GoRoute(
+      path: '/set-location',
+      builder: (context, state) => SetLocationScreen(
+        redirectTo: state.uri.queryParameters['redirect'] ?? '/home',
+      ),
+    ),
+
+    GoRoute(
+      path: '/booking/create/:workerId',
+      builder: (context, state) => CreateBookingScreen(
+        workerId: int.parse(state.pathParameters['workerId']!),
+      ),
+    ),
+
+    GoRoute(
+      path: '/customer/bookings',
+      builder: (context, state) =>
+          const MyBookingsScreen(isWorker: false),
+    ),
+
+    // IMPORTANT: Put this BEFORE /worker/:id
+    GoRoute(
+      path: '/worker/bookings',
+      builder: (context, state) =>
+          const MyBookingsScreen(isWorker: true),
+    ),
+
+    // Keep this LAST among /worker/* routes
+    GoRoute(
+      path: '/worker/:id',
+      builder: (context, state) => WorkerDetailsScreen(
+        workerId: state.pathParameters['id']!,
       ),
     ),
   ],

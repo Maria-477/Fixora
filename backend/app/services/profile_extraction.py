@@ -83,7 +83,7 @@ def _build_bio(name, skill, city, years):
     parts = []
 
     if name and skill:
-        parts.append(f"{name} is a {skill.lower()}")
+        parts.append(f"{name} has skills in {skill.lower()}")
 
     elif skill:
         parts.append(f"Experienced {skill.lower()}")

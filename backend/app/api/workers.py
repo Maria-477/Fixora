@@ -1,3 +1,4 @@
+from app.models.worker_profile import WorkerProfile
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -15,6 +16,9 @@ from app.schemas.worker import (
 
 from app.services.profile_extraction import extract_profile_from_text
 from app.crud.worker_profile import create_or_update_profile
+
+from app.models.worker_skill import WorkerSkill
+from app.models.skill import Skill
 
 router = APIRouter(
     prefix="/workers",
@@ -85,4 +89,84 @@ def save_profile(
     return {
         "message": "Profile saved successfully.",
         "profile_id": profile.id,
+    }
+
+
+@router.get("/profile/me")
+def get_my_profile(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_worker(current_user)
+
+    worker = _get_worker(
+        db,
+        current_user.id,
+    )
+
+    profile = (
+        db.query(WorkerProfile)
+        .filter(WorkerProfile.worker_id == worker.id)
+        .first()
+    )
+
+    if not profile:
+        return {"exists": False}
+
+    return {
+        "exists": True,
+        "full_name": profile.full_name,
+        "city": profile.city,
+        "experience_years": profile.experience_years,
+        "bio": profile.bio,
+    }
+
+@router.get("/{worker_id}")
+def get_worker_details(
+    worker_id: int,
+    db: Session = Depends(get_db),
+):
+    worker = db.query(Worker).filter(
+        Worker.id == worker_id
+    ).first()
+
+    if not worker:
+        raise HTTPException(
+            status_code=404,
+            detail="Worker not found",
+        )
+
+    profile = (
+        db.query(WorkerProfile)
+        .filter(WorkerProfile.worker_id == worker_id)
+        .first()
+    )
+
+    if not profile:
+        raise HTTPException(
+            status_code=404,
+            detail="This worker has not completed their profile yet",
+        )
+
+    skills = (
+        db.query(Skill.name)
+        .join(
+            WorkerSkill,
+            WorkerSkill.skill_id == Skill.id,
+        )
+        .filter(
+            WorkerSkill.worker_id == worker_id,
+        )
+        .all()
+    )
+
+    return {
+        "worker_id": worker.id,
+        "full_name": profile.full_name,
+        "city": profile.city,
+        "experience_years": profile.experience_years,
+        "bio": profile.bio,
+        "profile_image_url": profile.profile_image_url,
+        "is_verified": worker.is_verified,
+        "skills": [s.name for s in skills],
     }
