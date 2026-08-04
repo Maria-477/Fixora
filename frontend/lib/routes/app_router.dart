@@ -26,6 +26,8 @@ import '../screens/shared/set_location_screen.dart';
 import '../screens/booking/create_booking_screen.dart';
 import '../screens/booking/my_bookings_screen.dart';
 
+import '../screens/notifications/notifications_screen.dart';
+
 class HomeRouterScreen extends ConsumerWidget {
   const HomeRouterScreen({super.key});
 
@@ -74,6 +76,7 @@ final appRouter = GoRouter(
       path: '/otp',
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>;
+
         return OtpScreen(
           phone: extra['phone'],
           mockOtp: extra['mockOtp'],
@@ -129,14 +132,18 @@ final appRouter = GoRouter(
           const MyBookingsScreen(isWorker: false),
     ),
 
-    // IMPORTANT: Put this BEFORE /worker/:id
     GoRoute(
       path: '/worker/bookings',
       builder: (context, state) =>
           const MyBookingsScreen(isWorker: true),
     ),
 
-    // Keep this LAST among /worker/* routes
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) =>
+          const NotificationsScreen(),
+    ),
+
     GoRoute(
       path: '/worker/:id',
       builder: (context, state) => WorkerDetailsScreen(

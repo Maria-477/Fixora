@@ -4,7 +4,7 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database.session import get_db
-from app.api import auth, users, workers, portfolio, search, locations, bookings
+from app.api import auth, users, workers, portfolio, search, locations, bookings, notifications, admin
 
 app = FastAPI(
     title="Fixora API",
@@ -19,6 +19,8 @@ app.include_router(portfolio.router)
 app.include_router(search.router)
 app.include_router(locations.router)
 app.include_router(bookings.router)
+app.include_router(notifications.router)
+app.include_router(admin.router)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.get("/health")
