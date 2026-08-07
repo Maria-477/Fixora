@@ -27,6 +27,7 @@ import '../screens/booking/create_booking_screen.dart';
 import '../screens/booking/my_bookings_screen.dart';
 
 import '../screens/notifications/notifications_screen.dart';
+import '../screens/admin/admin_dashboard_screen.dart';
 
 class HomeRouterScreen extends ConsumerWidget {
   const HomeRouterScreen({super.key});
@@ -36,16 +37,17 @@ class HomeRouterScreen extends ConsumerWidget {
     final user = ref.watch(authProvider).user;
 
     if (user == null) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return user.userType == 'worker'
-        ? const WorkerDashboardScreen()
-        : const CustomerHomeScreen();
+    switch (user.userType) {
+      case 'worker':
+        return const WorkerDashboardScreen();
+      case 'admin':
+        return const AdminDashboardScreen();
+      default:
+        return const CustomerHomeScreen();
+    }
   }
 }
 

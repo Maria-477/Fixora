@@ -26,10 +26,13 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
   bool _isSubmitting = false;
   String? _error;
 
+  List<DateTime> _bookedSlots = [];
+
   @override
   void initState() {
     super.initState();
     _loadLocation();
+    _loadBookedSlots();
   }
 
   Future<void> _loadLocation() async {
@@ -42,6 +45,15 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
     } catch (e) {
       // location not saved
     }
+  }
+
+  Future<void> _loadBookedSlots() async {
+  final slots =
+      await _bookingService.getWorkerBookedSlots(widget.workerId);
+
+  setState(() {
+    _bookedSlots = slots;
+  });
   }
 
   Future<void> _pickDateTime() async {
@@ -86,6 +98,23 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
         _error = 'Please pick a time and describe the job';
       });
       return;
+    }
+
+    final isTaken = _bookedSlots.any(
+      (slot) =>
+        slot.year == _selectedDateTime!.year &&
+        slot.month == _selectedDateTime!.month &&
+        slot.day == _selectedDateTime!.day &&
+        slot.hour == _selectedDateTime!.hour &&
+        slot.minute == _selectedDateTime!.minute,
+    );
+
+    if (isTaken) {
+        setState(() {
+          _error =
+             'This time slot is already booked. Please choose another.';
+        });
+        return;
     }
 
     setState(() {
@@ -142,6 +171,30 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
                     : _selectedDateTime.toString().substring(0, 16),
               ),
             ),
+
+            if (_bookedSlots.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Already booked times:',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: _bookedSlots.map((slot) {
+                  return Chip(
+                    label: Text(
+                      slot.toString().substring(0, 16),
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                    backgroundColor:
+                        Theme.of(context).colorScheme.errorContainer,
+                  );
+                }).toList(),
+              ),
+            ],
+
             if (_error != null) ...[
               const SizedBox(height: 16),
               Text(

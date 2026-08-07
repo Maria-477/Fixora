@@ -21,6 +21,9 @@ from app.crud.booking import (
 
 from app.services.notification_service import create_notification
 
+from app.models.booking import Booking
+from app.models.booking_status import BookingStatus
+
 
 STATUS_MESSAGES = {
     "confirmed": ("Booking confirmed", "Your booking request was accepted."),
@@ -152,7 +155,40 @@ def change_status(
             status_code=404,
             detail="Booking not found",
         )
+    
+    customer = (
+       db.query(Customer)
+       .filter(Customer.id == booking.customer_id)
+       .first()
+    )
 
+    worker = (
+       db.query(Worker)
+       .filter(Worker.id == booking.worker_id)
+       .first()
+    )
+
+    is_owner = (
+       (customer and customer.user_id == current_user.id)
+       or
+       (worker and worker.user_id == current_user.id)
+    )
+
+    if not is_owner:
+       raise HTTPException(
+          status_code=403,
+          detail="Not authorized to modify this booking",
+        )
+
+    if (
+       current_user.user_type == "customer"
+       and payload.status != "cancelled"
+    ):
+       raise HTTPException(
+          status_code=403,
+          detail="Customers can only cancel bookings",
+        )
+    
     current_status_query = db.execute(
         text(
             "SELECT name FROM booking_status WHERE id = :id"
@@ -178,24 +214,41 @@ def change_status(
     )
 
     # Notify customer about booking status change
-    customer = (
-        db.query(Customer)
-        .filter(Customer.id == booking.customer_id)
-        .first()
+    notify_user_id = (
+       worker.user_id
+       if current_user.user_type == "customer"
+       else customer.user_id
     )
 
-    if customer and payload.status in STATUS_MESSAGES:
-        title, message = STATUS_MESSAGES[payload.status]
-        create_notification(
-            db,
-            customer.user_id,
-            title,
-            message,
-        )
+    if payload.status in STATUS_MESSAGES:
+       title, message = STATUS_MESSAGES[payload.status]
+       create_notification(
+           db,
+           notify_user_id,
+           title,
+           message,
+    )
 
     return {
         "id": updated.id,
         "status": payload.status,
     }
 
+@router.get("/worker/{worker_id}/slots")
+def get_worker_booked_slots(
+    worker_id: int,
+    db: Session = Depends(get_db),
+):
+    bookings = (
+        db.query(Booking.scheduled_at)
+        .filter(Booking.worker_id == worker_id)
+        .join(BookingStatus, BookingStatus.id == Booking.status_id)
+        .filter(
+            BookingStatus.name.in_(
+                ["pending", "confirmed", "in_progress"]
+            )
+        )
+        .all()
+    )
 
+    return [b[0].isoformat() for b in bookings]

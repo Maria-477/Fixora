@@ -23,29 +23,55 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   }
 
   Future<void> _load() async {
-  try {
-    print('Loading bookings...');
-    final bookings = await _bookingService.getMyBookings();
+    try {
+      print('Loading bookings...');
+      final bookings = await _bookingService.getMyBookings();
 
-    print('Bookings loaded: ${bookings.length}');
+      print('Bookings loaded: ${bookings.length}');
 
-    setState(() {
-      _bookings = bookings;
-      _isLoading = false;
-    });
-  } catch (e, st) {
-    print(e);
-    print(st);
+      setState(() {
+        _bookings = bookings;
+        _isLoading = false;
+      });
+    } catch (e, st) {
+      print(e);
+      print(st);
 
-    setState(() {
-      _isLoading = false;
-    });
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
-}
 
   Future<void> _updateStatus(int bookingId, String status) async {
     final success = await _bookingService.updateStatus(bookingId, status);
     if (success) _load();
+  }
+
+  Future<void> _confirmCancel(int bookingId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Booking'),
+        content: const Text(
+          'Are you sure you want to cancel this booking?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Yes, Cancel'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _updateStatus(bookingId, 'cancelled');
+    }
   }
 
   Color _statusColor(String status, BuildContext context) {
@@ -65,67 +91,117 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My bookings')),
+      appBar: AppBar(
+        title: const Text('My bookings'),
+      ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
           : _bookings.isEmpty
-              ? const Center(child: Text('No bookings yet'))
+              ? const Center(
+                  child: Text('No bookings yet'),
+                )
               : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView.builder(
                     itemCount: _bookings.length,
                     itemBuilder: (context, index) {
                       final b = _bookings[index];
+
                       return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.isWorker ? (b.customerName ?? 'Customer') : (b.workerName ?? 'Worker'),
+                                widget.isWorker
+                                    ? (b.customerName ?? 'Customer')
+                                    : (b.workerName ?? 'Worker'),
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                               const SizedBox(height: 4),
+
                               Text(b.serviceDescription ?? ''),
+
                               const SizedBox(height: 8),
+
                               Chip(
                                 label: Text(b.status),
-                                backgroundColor: _statusColor(b.status, context).withOpacity(0.15),
-                                labelStyle: TextStyle(color: _statusColor(b.status, context)),
+                                backgroundColor: _statusColor(
+                                  b.status,
+                                  context,
+                                ).withOpacity(0.15),
+                                labelStyle: TextStyle(
+                                  color: _statusColor(b.status, context),
+                                ),
                               ),
-                              if (widget.isWorker && b.status == 'pending') ...[
+
+                              if (widget.isWorker &&
+                                  b.status == 'pending') ...[
                                 const SizedBox(height: 12),
                                 Row(
                                   children: [
                                     Expanded(
                                       child: ElevatedButton(
-                                        onPressed: () => _updateStatus(b.id, 'confirmed'),
+                                        onPressed: () => _updateStatus(
+                                          b.id,
+                                          'confirmed',
+                                        ),
                                         child: const Text('Accept'),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: OutlinedButton(
-                                        onPressed: () => _updateStatus(b.id, 'cancelled'),
+                                        onPressed: () => _confirmCancel(b.id),
                                         child: const Text('Decline'),
                                       ),
                                     ),
                                   ],
                                 ),
                               ],
-                              if (widget.isWorker && b.status == 'confirmed') ...[
+
+                              if (!widget.isWorker &&
+                                  (b.status == 'pending' ||
+                                      b.status == 'confirmed')) ...[
+                                const SizedBox(height: 12),
+                                OutlinedButton(
+                                  onPressed: () => _confirmCancel(b.id),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Theme.of(context)
+                                        .colorScheme
+                                        .error,
+                                  ),
+                                  child: const Text('Cancel booking'),
+                                ),
+                              ],
+
+                              if (widget.isWorker &&
+                                  b.status == 'confirmed') ...[
                                 const SizedBox(height: 12),
                                 ElevatedButton(
-                                  onPressed: () => _updateStatus(b.id, 'in_progress'),
+                                  onPressed: () => _updateStatus(
+                                    b.id,
+                                    'in_progress',
+                                  ),
                                   child: const Text('Start job'),
                                 ),
                               ],
-                              if (widget.isWorker && b.status == 'in_progress') ...[
+
+                              if (widget.isWorker &&
+                                  b.status == 'in_progress') ...[
                                 const SizedBox(height: 12),
                                 ElevatedButton(
-                                  onPressed: () => _updateStatus(b.id, 'completed'),
+                                  onPressed: () => _updateStatus(
+                                    b.id,
+                                    'completed',
+                                  ),
                                   child: const Text('Mark completed'),
                                 ),
                               ],

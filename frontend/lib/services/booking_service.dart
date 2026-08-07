@@ -53,4 +53,18 @@ class BookingService {
       return false;
     }
   }
+
+
+Future<List<DateTime>> getWorkerBookedSlots(int workerId) async {
+  try {
+    final response =
+        await _dio.get('/bookings/worker/$workerId/slots');
+
+    return (response.data as List)
+        .map((e) => DateTime.parse(e))
+        .toList();
+  } on DioException {
+    return [];
+  }
+}
 }

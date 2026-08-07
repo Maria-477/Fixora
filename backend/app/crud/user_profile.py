@@ -10,4 +10,6 @@ def get_full_name_for_user(db: Session, user: User) -> str | None:
     if user.user_type == "worker":
         # worker_profiles isn't modeled yet (Milestone 9+); workers table has no name field yet
         return None
+    if user.user_type == "admin":
+        return "Admin"
     return None

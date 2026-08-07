@@ -27,6 +27,24 @@ class ExtractedProfile {
   }
 }
 
+class PortfolioImageInfo {
+  final String url;
+  final String? caption;
+
+  PortfolioImageInfo({
+    required this.url,
+    this.caption,
+  });
+
+  factory PortfolioImageInfo.fromJson(Map<String, dynamic> json) {
+    return PortfolioImageInfo(
+      url: json['url'],
+      caption: json['caption'],
+    );
+  }
+}
+
+
 class WorkerDetails {
   final int workerId;
   final String fullName;
@@ -35,6 +53,7 @@ class WorkerDetails {
   final String? bio;
   final String? profileImageUrl;
   final List<String> skills;
+  final List<PortfolioImageInfo> portfolioImages;
 
   WorkerDetails({
     required this.workerId,
@@ -44,6 +63,7 @@ class WorkerDetails {
     this.bio,
     this.profileImageUrl,
     required this.skills,
+    required this.portfolioImages,
   });
 
   factory WorkerDetails.fromJson(Map<String, dynamic> json) {
@@ -55,6 +75,9 @@ class WorkerDetails {
       bio: json['bio'],
       profileImageUrl: json['profile_image_url'],
       skills: List<String>.from(json['skills'] ?? []),
+      portfolioImages: (json['portfolio_images'] as List? ?? [])
+          .map((e) => PortfolioImageInfo.fromJson(e))
+          .toList(),
     );
   }
 }

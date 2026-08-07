@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiClient {
-  static const String baseUrl = 'http://192.168.0.104:8000';
+  static const String baseUrl = 'http://192.168.1.128:8000';
 
   static String imageUrl(String relativePath) => '$baseUrl$relativePath';
 

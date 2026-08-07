@@ -19,6 +19,7 @@ from app.crud.worker_profile import create_or_update_profile
 
 from app.models.worker_skill import WorkerSkill
 from app.models.skill import Skill
+from app.models.portfolio_image import PortfolioImage
 
 router = APIRouter(
     prefix="/workers",
@@ -159,6 +160,11 @@ def get_worker_details(
         )
         .all()
     )
+    portfolio = (
+    db.query(PortfolioImage)
+    .filter(PortfolioImage.worker_id == worker_id)
+    .all()
+    )
 
     return {
         "worker_id": worker.id,
@@ -169,4 +175,11 @@ def get_worker_details(
         "profile_image_url": profile.profile_image_url,
         "is_verified": worker.is_verified,
         "skills": [s.name for s in skills],
+        "portfolio_images": [
+           {
+              "url": p.image_url,
+              "caption": p.caption,
+           }
+           for p in portfolio
+        ],
     }

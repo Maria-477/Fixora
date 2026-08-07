@@ -154,6 +154,100 @@ class _WorkerDetailsScreenState
                         Text(_details!.bio!),
                       ],
 
+                      // ==========================
+                      // Portfolio Section
+                      // ==========================
+                      if (_details!.portfolioImages.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+
+                        const Text(
+                          'Work Photos',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        SizedBox(
+                          height: 140,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount:
+                                _details!.portfolioImages.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 12),
+                            itemBuilder: (context, index) {
+                              final image = _details!
+                                  .portfolioImages[index];
+
+                              return Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (_) => Dialog(
+                                          insetPadding: const EdgeInsets.all(12),
+                                          child: InteractiveViewer(
+                                            child: Image.network(
+                                              ApiClient.imageUrl(image.url),
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.network(
+                                        ApiClient.imageUrl(image.url),
+                                        width: 140,
+                                        height: 100,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Container(
+                                          width: 140,
+                                          height: 100,
+                                          color: Colors.grey.shade300,
+                                          child: const Icon(
+                                            Icons.broken_image,
+                                            size: 40,
+                                          ),      
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  if (image.caption != null &&
+                                      image.caption!.isNotEmpty)
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(
+                                        top: 6,
+                                      ),
+                                      child: SizedBox(
+                                        width: 140,
+                                        child: Text(
+                                          image.caption!,
+                                          maxLines: 2,
+                                          overflow: TextOverflow
+                                              .ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+
                       const SizedBox(height: 32),
 
                       ElevatedButton(
