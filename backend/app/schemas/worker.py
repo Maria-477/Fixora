@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 class ExtractProfileRequest(BaseModel):
     transcript: str
+    source_language: str = "en"
 
 
 class ExtractProfileResponse(BaseModel):

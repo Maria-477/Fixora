@@ -21,6 +21,7 @@ def create_booking(db: Session, customer_id: int, data) -> Booking:
         status_id=pending_id,
         service_description=data.service_description,
         scheduled_at=data.scheduled_at,
+        suggested_price=data.suggested_price,
     )
 
     db.add(booking)
@@ -33,7 +34,7 @@ def create_booking(db: Session, customer_id: int, data) -> Booking:
 def get_bookings_for_worker(db: Session, worker_id: int):
     query = text("""
         SELECT b.id, b.worker_id, b.customer_id, bs.name AS status,
-               b.service_description, b.scheduled_at, c.full_name AS customer_name
+               b.service_description, b.scheduled_at, c.full_name AS customer_name, b.suggested_price
         FROM bookings b
         JOIN booking_status bs ON bs.id = b.status_id
         JOIN customers c ON c.id = b.customer_id
@@ -47,7 +48,7 @@ def get_bookings_for_worker(db: Session, worker_id: int):
 def get_bookings_for_customer(db: Session, customer_id: int):
     query = text("""
         SELECT b.id, b.worker_id, b.customer_id, bs.name AS status,
-               b.service_description, b.scheduled_at, wp.full_name AS worker_name
+               b.service_description, b.scheduled_at, wp.full_name AS worker_name, b.suggested_price
         FROM bookings b
         JOIN booking_status bs ON bs.id = b.status_id
         JOIN worker_profiles wp ON wp.worker_id = b.worker_id

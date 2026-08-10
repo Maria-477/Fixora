@@ -20,6 +20,7 @@ from app.crud.worker_profile import create_or_update_profile
 from app.models.worker_skill import WorkerSkill
 from app.models.skill import Skill
 from app.models.portfolio_image import PortfolioImage
+from app.services.translation_service import translate_to_english
 
 router = APIRouter(
     prefix="/workers",
@@ -62,10 +63,19 @@ def extract_profile(
 ):
     _require_worker(current_user)
 
-    return extract_profile_from_text(
-        db,
-        payload.transcript,
+    english_text = translate_to_english(
+    payload.transcript,
+    payload.source_language,
     )
+
+    result = extract_profile_from_text(
+       db,
+       english_text,
+    )
+
+    result["raw_transcript"] = payload.transcript
+
+    return result
 
 
 @router.post("/profile")

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../models/booking_models.dart';
 import 'api_client.dart';
 
+
 class BookingService {
   final Dio _dio = ApiClient().dio;
 
@@ -10,6 +11,7 @@ class BookingService {
     required int locationId,
     required String description,
     required DateTime scheduledAt,
+    double? suggestedPrice,
   }) async {
     try {
       await _dio.post('/bookings', data: {
@@ -17,6 +19,7 @@ class BookingService {
         'location_id': locationId,
         'service_description': description,
         'scheduled_at': scheduledAt.toIso8601String(),
+        'suggested_price': suggestedPrice,
       });
       return true;
     } on DioException {
@@ -67,4 +70,26 @@ Future<List<DateTime>> getWorkerBookedSlots(int workerId) async {
     return [];
   }
 }
+
+Future<double?> estimatePrice({
+  required int workerId,
+  required String description,
+}) async {
+  try {
+    final response = await _dio.post(
+      '/bookings/estimate-price',
+      data: {
+        'worker_id': workerId,
+        'service_description': description,
+      },
+    );
+
+    return double.tryParse(
+      response.data['suggested_price'].toString(),
+    );
+  } on DioException {
+    return null;
+  }
+}
+
 }

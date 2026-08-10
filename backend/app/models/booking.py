@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, DateTime, TIMESTAMP, ForeignKey, func
+from sqlalchemy import Column, Integer, Text, DateTime, TIMESTAMP, ForeignKey, func, DECIMAL
 from app.database.session import Base
 
 class Booking(Base):
@@ -13,3 +13,4 @@ class Booking(Base):
     scheduled_at = Column(DateTime, nullable=False)
     created_at = Column(TIMESTAMP, server_default=func.now())
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+    suggested_price = Column(DECIMAL(10,2), nullable=True)

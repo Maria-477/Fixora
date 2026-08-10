@@ -7,6 +7,7 @@ class Booking {
   final DateTime scheduledAt;
   final String? workerName;
   final String? customerName;
+  final double? suggestedPrice;
 
   Booking({
     required this.id,
@@ -17,6 +18,7 @@ class Booking {
     required this.scheduledAt,
     this.workerName,
     this.customerName,
+    this.suggestedPrice,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,11 @@ class Booking {
       scheduledAt: DateTime.parse(json['scheduled_at']),
       workerName: json['worker_name'],
       customerName: json['customer_name'],
+      suggestedPrice: json['suggested_price'] != null
+          ? double.tryParse(
+              json['suggested_price'].toString(),
+            )
+          : null,
     );
   }
 }

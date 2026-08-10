@@ -6,12 +6,16 @@ import 'api_client.dart';
 class WorkerService {
   final Dio _dio = ApiClient().dio;
 
-  Future<ExtractedProfile?> extractProfile(String transcript) async {
+  Future<ExtractedProfile?> extractProfile(
+    String transcript,
+    String sourceLanguage,
+  ) async {
     try {
       final response = await _dio.post(
         '/workers/extract-profile',
         data: {
           'transcript': transcript,
+          'source_language': sourceLanguage,
         },
       );
 

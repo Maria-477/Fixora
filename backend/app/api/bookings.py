@@ -23,6 +23,10 @@ from app.services.notification_service import create_notification
 
 from app.models.booking import Booking
 from app.models.booking_status import BookingStatus
+from app.schemas.booking import EstimatePriceRequest, EstimatePriceResponse
+from app.services.pricing_service import suggest_price
+from app.models.worker_skill import WorkerSkill
+from app.models.skill import Skill
 
 
 STATUS_MESSAGES = {
@@ -52,7 +56,7 @@ def create_new_booking(
     if current_user.user_type != "customer":
         raise HTTPException(
             status_code=403,
-            detail="Only customers can create bookings",
+            detail="Only customers can create bookings"
         )
 
     worker_profile = (
@@ -64,7 +68,7 @@ def create_new_booking(
     if not worker_profile:
         raise HTTPException(
             status_code=404,
-            detail="This worker has not completed their profile yet",
+            detail="This worker has not completed their profile yet"
         )
 
     customer = (
@@ -73,33 +77,30 @@ def create_new_booking(
         .first()
     )
 
-    booking = create_booking(
-        db,
-        customer.id,
-        payload,
-    )
+    booking = create_booking(db, customer.id, payload)
 
-    # Notify worker about new booking request
-    worker = (
-        db.query(Worker)
-        .filter(Worker.id == payload.worker_id)
-        .first()
-    )
+    worker = db.query(Worker).filter(
+        Worker.id == payload.worker_id
+    ).first()
 
     if worker:
         create_notification(
             db,
             worker.user_id,
             "New booking request",
-            f"{customer.full_name} wants to book you.",
+            f"{customer.full_name} wants to book you."
         )
 
     return {
         "id": booking.id,
         "status": "pending",
+        "suggested_price": (
+            float(booking.suggested_price)
+            if booking.suggested_price
+            else None
+        ),
         "message": "Booking request sent",
     }
-
 
 @router.get("/my")
 def get_my_bookings(
@@ -233,6 +234,33 @@ def change_status(
         "id": updated.id,
         "status": payload.status,
     }
+
+@router.post("/estimate-price", response_model=EstimatePriceResponse)
+def estimate_price(
+    payload: EstimatePriceRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if current_user.user_type != "customer":
+        raise HTTPException(
+            status_code=403,
+            detail="Only customers can request a price estimate"
+        )
+
+    primary_skill = (
+        db.query(Skill.name)
+        .join(WorkerSkill, WorkerSkill.skill_id == Skill.id)
+        .filter(WorkerSkill.worker_id == payload.worker_id)
+        .first()
+    )
+
+    skill_name = primary_skill[0] if primary_skill else None
+    price = suggest_price(skill_name, payload.service_description)
+
+    return EstimatePriceResponse(
+        suggested_price=price,
+        skill=skill_name
+    )
 
 @router.get("/worker/{worker_id}/slots")
 def get_worker_booked_slots(

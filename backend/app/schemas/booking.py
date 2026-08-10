@@ -7,6 +7,7 @@ class CreateBookingRequest(BaseModel):
     location_id: int
     service_description: str
     scheduled_at: datetime
+    suggested_price: float | None = None
 
 
 class BookingResponse(BaseModel):
@@ -22,3 +23,12 @@ class BookingResponse(BaseModel):
 
 class UpdateStatusRequest(BaseModel):
     status: str  # confirmed, cancelled, in_progress, completed
+
+class EstimatePriceRequest(BaseModel):
+    worker_id: int
+    service_description: str
+
+
+class EstimatePriceResponse(BaseModel):
+    suggested_price: float
+    skill: str | None

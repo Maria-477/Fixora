@@ -130,6 +130,29 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                               Text(b.serviceDescription ?? ''),
 
                               const SizedBox(height: 8),
+                              Text(
+                                'Date: ${b.scheduledAt.day.toString().padLeft(2, '0')}/'
+                                '${b.scheduledAt.month.toString().padLeft(2, '0')}/'
+                                '${b.scheduledAt.year}',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                              
+                              const SizedBox(height: 4),
+
+                              Text(
+                                'Time: ${TimeOfDay.fromDateTime(b.scheduledAt).format(context)}',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+
+                              if (b.suggestedPrice != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Price: PKR ${b.suggestedPrice!.toStringAsFixed(0)}',
+                                  style: Theme.of(context).textTheme.titleSmall,
+                                ),
+                              ],
+                            
+                              const SizedBox(height: 8),
 
                               Chip(
                                 label: Text(b.status),

@@ -42,18 +42,47 @@ def extract_profile_from_text(db: Session, transcript: str) -> dict:
 
 
 def _extract_name(text: str) -> str | None:
-    match = re.search(r"my name is ([a-z]+(?: [a-z]+)?)", text)
-    return match.group(1).title() if match else None
+    patterns = [
+        r"my name is ([a-z]+(?: [a-z]+)?)",
+        r"i am ([a-z]+(?: [a-z]+)?)(?:,| and| from| a )",
+        r"this is ([a-z]+(?: [a-z]+)?)",
+        r"call me ([a-z]+(?: [a-z]+)?)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            return match.group(1).title()
+    return None
 
 
 def _extract_city(text: str) -> str | None:
-    match = re.search(r"from ([a-z]+(?: [a-z]+)?)", text)
-    return match.group(1).title() if match else None
+    patterns = [
+        r"from ([a-z]+(?: [a-z]+)?)",
+        r"i live in ([a-z]+(?: [a-z]+)?)",
+        r"living in ([a-z]+(?: [a-z]+)?)",
+        r"based in ([a-z]+(?: [a-z]+)?)",
+        r"located in ([a-z]+(?: [a-z]+)?)",
+        r"in ([a-z]+(?: [a-z]+)?) city",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            return match.group(1).title()
+    return None
 
 
 def _extract_experience(text: str) -> int:
-    match = re.search(r"(\d+)\s*(?:years|year)", text)
-    return int(match.group(1)) if match else 0
+    patterns = [
+        r"(\d+)\s*(?:years|year)",
+        r"(\d+)\s*(?:yrs)",
+        r"experience of (\d+)",
+        r"working for (\d+)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            return int(match.group(1))
+    return 0
 
 
 def _match_skill(db: Session, text: str) -> str | None:
