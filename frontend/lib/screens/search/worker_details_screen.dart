@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../models/worker_models.dart';
 import '../../services/api_client.dart';
 import '../../services/worker_service.dart';
+import '../../services/review_service.dart';
 
 class WorkerDetailsScreen extends StatefulWidget {
   final String workerId;
@@ -21,11 +22,16 @@ class WorkerDetailsScreen extends StatefulWidget {
 class _WorkerDetailsScreenState
     extends State<WorkerDetailsScreen> {
   final _workerService = WorkerService();
+  final _reviewService = ReviewService();
 
   WorkerDetails? _details;
-  bool _isLoading = true;
-  String? _error;
+  List<ReviewInfo> _reviews = [];
 
+  bool _isLoading = true;
+  bool _reviewsLoading = true;
+
+  String? _error;
+  
   @override
   void initState() {
     super.initState();
@@ -33,21 +39,30 @@ class _WorkerDetailsScreenState
   }
 
   Future<void> _loadWorker() async {
-    final result = await _workerService.getWorkerDetails(
-      int.parse(widget.workerId),
-    );
+  final workerId = int.parse(widget.workerId);
 
-    if (!mounted) return;
+  final result = await _workerService.getWorkerDetails(
+    workerId,
+  );
 
-    setState(() {
-      _details = result;
-      _isLoading = false;
+  final reviews = await _reviewService.getWorkerReviews(
+    workerId,
+  );
 
-      if (result == null) {
-        _error = 'Could not load this worker.';
-      }
-    });
-  }
+  if (!mounted) return;
+
+  setState(() {
+    _details = result;
+    _reviews = reviews;
+
+    _isLoading = false;
+    _reviewsLoading = false;
+
+    if (result == null) {
+      _error = 'Could not load this worker.';
+    }
+  });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -95,10 +110,40 @@ class _WorkerDetailsScreenState
                         child: Text(
                           _details!.fullName,
                           style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall,
+                            .textTheme
+                            .headlineSmall,
                         ),
                       ),
+
+                      const SizedBox(height: 4),
+
+                      if (_details!.reviewCount > 0)
+                        Center(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${_details!.averageRating} '
+                                '(${_details!.reviewCount} reviews)',
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        const Center(
+                          child: Text(
+                            'No reviews yet',
+                            style: TextStyle(
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
 
                       const SizedBox(height: 16),
 
@@ -247,6 +292,85 @@ class _WorkerDetailsScreenState
                           ),
                         ),
                       ],
+                      
+                      const SizedBox(height: 24),
+
+                      const Text(
+                        'Reviews',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      if (_reviewsLoading)
+                        const Center(
+                          child: CircularProgressIndicator(),
+                        )
+                      else if (_reviews.isEmpty)
+                        const Text(
+                          'No reviews yet',
+                          style: TextStyle(
+                            color: Colors.grey,
+                          ),
+                        )
+                      else
+                        ..._reviews.map(
+                          (review) => Card(
+                            margin: const EdgeInsets.only(
+                              bottom: 12,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      review.customerName ??
+                                          'Customer',
+                                      style: const TextStyle(
+                                        fontWeight:
+                                            FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+
+                                  Row(
+                                    children: List.generate(
+                                      5,
+                                      (index) => Icon(
+                                        index < review.rating
+                                            ? Icons.star
+                                            : Icons.star_border,
+                                        color: Colors.amber,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              if (review.comment != null &&
+                                  review.comment!
+                                      .trim()
+                                      .isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  review.comment!,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
 
                       const SizedBox(height: 32),
 

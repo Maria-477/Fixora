@@ -28,6 +28,7 @@ import '../screens/booking/my_bookings_screen.dart';
 
 import '../screens/notifications/notifications_screen.dart';
 import '../screens/admin/admin_dashboard_screen.dart';
+import '../screens/booking/leave_review_screen.dart';
 
 class HomeRouterScreen extends ConsumerWidget {
   const HomeRouterScreen({super.key});
@@ -151,6 +152,17 @@ final appRouter = GoRouter(
       builder: (context, state) => WorkerDetailsScreen(
         workerId: state.pathParameters['id']!,
       ),
+    ),
+
+    GoRoute(
+      path: '/booking/:id/review',
+      builder: (context, state) {
+        return LeaveReviewScreen(
+          bookingId: int.parse(
+            state.pathParameters['id']!,
+          ),
+        );
+      },
     ),
   ],
 );

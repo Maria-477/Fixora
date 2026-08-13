@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/booking_models.dart';
 import '../../services/booking_service.dart';
+import 'package:go_router/go_router.dart';
 
 class MyBookingsScreen extends StatefulWidget {
   final bool isWorker;
@@ -165,6 +166,51 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                                 ),
                               ),
 
+                              if (b.hasReview) ...[
+                                const SizedBox(height: 12),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                       Row(
+                                        children: [
+                                          ...List.generate(
+                                            5,
+                                            (i) => Icon(
+                                              i < b.reviewRating!
+                                                  ? Icons.star
+                                                  : Icons.star_border,
+                                              size: 18,
+                                              color: Colors.amber,
+                                              
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                           Text(
+                                            '${b.reviewRating}/5',
+                                            style: Theme.of(context).textTheme.bodySmall,
+                                           ),
+                                        ],
+                                       ),
+                                       if (b.reviewComment != null && b.reviewComment!.isNotEmpty) ...[
+                                        const SizedBox(height: 4),
+                                         Text(
+                                          b.reviewComment!,
+                                          style: Theme.of(context).textTheme.bodyMedium,
+                                         ),
+                                       ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+
+                                       
                               if (widget.isWorker &&
                                   b.status == 'pending') ...[
                                 const SizedBox(height: 12),
@@ -226,6 +272,20 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                                     'completed',
                                   ),
                                   child: const Text('Mark completed'),
+                                ),
+                              ],
+
+                              if (!widget.isWorker &&
+                                  b.status == 'completed' && !b.hasReview ) ...[
+                                const SizedBox(height: 12),
+                                OutlinedButton(
+                                  onPressed: () async {
+                                    await context.push(
+                                      '/booking/${b.id}/review',
+                                    );
+                                     _load();
+                                  },
+                                  child: const Text('Leave a review'),
                                 ),
                               ],
                             ],

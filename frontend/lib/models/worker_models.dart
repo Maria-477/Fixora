@@ -54,6 +54,8 @@ class WorkerDetails {
   final String? profileImageUrl;
   final List<String> skills;
   final List<PortfolioImageInfo> portfolioImages;
+  final double? averageRating;
+  final int reviewCount;
 
   WorkerDetails({
     required this.workerId,
@@ -64,6 +66,8 @@ class WorkerDetails {
     this.profileImageUrl,
     required this.skills,
     required this.portfolioImages,
+    this.averageRating,
+    this.reviewCount = 0,
   });
 
   factory WorkerDetails.fromJson(Map<String, dynamic> json) {
@@ -78,6 +82,39 @@ class WorkerDetails {
       portfolioImages: (json['portfolio_images'] as List? ?? [])
           .map((e) => PortfolioImageInfo.fromJson(e))
           .toList(),
+      
+      averageRating: json['average_rating'] != null
+        ? double.tryParse(
+            json['average_rating'].toString(),
+          )
+        : null,
+      reviewCount: json['review_count'] ?? 0,
+    );
+  }
+}
+
+class ReviewInfo {
+  final int id;
+  final int rating;
+  final String? comment;
+  final String? customerName;
+  final String createdAt;
+
+  ReviewInfo({
+    required this.id,
+    required this.rating,
+    this.comment,
+    this.customerName,
+    required this.createdAt,
+  });
+
+  factory ReviewInfo.fromJson(Map<String, dynamic> json) {
+    return ReviewInfo(
+      id: json['id'],
+      rating: json['rating'],
+      comment: json['comment'],
+      customerName: json['customer_name'],
+      createdAt: json['created_at'],
     );
   }
 }

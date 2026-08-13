@@ -8,6 +8,8 @@ class Booking {
   final String? workerName;
   final String? customerName;
   final double? suggestedPrice;
+  final int? reviewRating;
+  final String? reviewComment;
 
   Booking({
     required this.id,
@@ -19,7 +21,11 @@ class Booking {
     this.workerName,
     this.customerName,
     this.suggestedPrice,
+    this.reviewRating,
+    this.reviewComment,
   });
+
+  bool get hasReview => reviewRating != null;
 
   factory Booking.fromJson(Map<String, dynamic> json) {
     return Booking(
@@ -36,6 +42,8 @@ class Booking {
               json['suggested_price'].toString(),
             )
           : null,
+      reviewRating: json['review_rating'],
+      reviewComment: json['review_comment'],
     );
   }
 }

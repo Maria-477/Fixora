@@ -34,28 +34,32 @@ def create_booking(db: Session, customer_id: int, data) -> Booking:
 def get_bookings_for_worker(db: Session, worker_id: int):
     query = text("""
         SELECT b.id, b.worker_id, b.customer_id, bs.name AS status,
-               b.service_description, b.scheduled_at, c.full_name AS customer_name, b.suggested_price
+               b.service_description, b.scheduled_at, b.suggested_price,
+               c.full_name AS customer_name,
+               r.rating AS review_rating, r.comment AS review_comment
         FROM bookings b
         JOIN booking_status bs ON bs.id = b.status_id
         JOIN customers c ON c.id = b.customer_id
+        LEFT JOIN reviews r ON r.booking_id = b.id
         WHERE b.worker_id = :worker_id
         ORDER BY b.scheduled_at DESC
     """)
-
     return db.execute(query, {"worker_id": worker_id}).mappings().all()
 
 
 def get_bookings_for_customer(db: Session, customer_id: int):
     query = text("""
         SELECT b.id, b.worker_id, b.customer_id, bs.name AS status,
-               b.service_description, b.scheduled_at, wp.full_name AS worker_name, b.suggested_price
+               b.service_description, b.scheduled_at, b.suggested_price,
+               wp.full_name AS worker_name,
+               r.rating AS review_rating, r.comment AS review_comment
         FROM bookings b
         JOIN booking_status bs ON bs.id = b.status_id
         JOIN worker_profiles wp ON wp.worker_id = b.worker_id
+        LEFT JOIN reviews r ON r.booking_id = b.id
         WHERE b.customer_id = :customer_id
         ORDER BY b.scheduled_at DESC
     """)
-
     return db.execute(query, {"customer_id": customer_id}).mappings().all()
 
 

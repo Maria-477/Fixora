@@ -21,6 +21,7 @@ from app.models.worker_skill import WorkerSkill
 from app.models.skill import Skill
 from app.models.portfolio_image import PortfolioImage
 from app.services.translation_service import translate_to_english
+from app.crud.review import get_worker_rating_summary
 
 router = APIRouter(
     prefix="/workers",
@@ -176,6 +177,11 @@ def get_worker_details(
     .all()
     )
 
+    rating_summary = get_worker_rating_summary(
+    db,
+    worker_id,
+    )
+
     return {
         "worker_id": worker.id,
         "full_name": profile.full_name,
@@ -192,4 +198,6 @@ def get_worker_details(
            }
            for p in portfolio
         ],
+        "average_rating": rating_summary["average_rating"],
+        "review_count": rating_summary["review_count"],
     }
