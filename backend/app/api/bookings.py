@@ -27,6 +27,7 @@ from app.schemas.booking import EstimatePriceRequest, EstimatePriceResponse
 from app.services.pricing_service import suggest_price
 from app.models.worker_skill import WorkerSkill
 from app.models.skill import Skill
+from app.services.problem_detection_service import detect_problem
 
 
 STATUS_MESSAGES = {
@@ -115,26 +116,61 @@ def get_my_bookings(
             .first()
         )
 
-        return list(
+        if not worker:
+            raise HTTPException(
+                status_code=404,
+                detail="Worker record not found",
+            )
+
+        bookings = list(
             get_bookings_for_worker(
                 db,
                 worker.id,
             )
         )
 
-    customer = (
-        db.query(Customer)
-        .filter(Customer.user_id == current_user.id)
-        .first()
-    )
+    else:
 
-    return list(
-        get_bookings_for_customer(
-            db,
-            customer.id,
+        customer = (
+            db.query(Customer)
+            .filter(Customer.user_id == current_user.id)
+            .first()
         )
-    )
 
+        if not customer:
+            raise HTTPException(
+                status_code=404,
+                detail="Customer record not found",
+            )
+
+        bookings = list(
+            get_bookings_for_customer(
+                db,
+                customer.id,
+            )
+        )
+
+    # Add AI problem detection information to each booking
+    result = []
+
+    for b in bookings:
+        b_dict = dict(b)
+
+        if b_dict.get("service_description"):
+            problem_info = detect_problem(
+                b_dict["service_description"]
+            )
+
+            b_dict["urgency_level"] = problem_info["urgency_level"]
+            b_dict["urgency_label"] = problem_info["urgency_label"]
+
+        else:
+            b_dict["urgency_level"] = None
+            b_dict["urgency_label"] = None
+
+        result.append(b_dict)
+
+    return result
 
 @router.patch("/{booking_id}/status")
 def change_status(
@@ -257,9 +293,14 @@ def estimate_price(
     skill_name = primary_skill[0] if primary_skill else None
     price = suggest_price(skill_name, payload.service_description)
 
+    problem_info = detect_problem(payload.service_description)
+
     return EstimatePriceResponse(
         suggested_price=price,
-        skill=skill_name
+        skill=skill_name,
+        urgency_level=problem_info["urgency_level"],
+        urgency_label=problem_info["urgency_label"],
+        risk_notes=problem_info["risk_notes"]
     )
 
 @router.get("/worker/{worker_id}/slots")

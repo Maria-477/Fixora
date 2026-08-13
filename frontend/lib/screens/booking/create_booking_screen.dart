@@ -23,7 +23,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
   int? _locationId;
   List<DateTime> _bookedSlots = [];
 
-  double? _estimatedPrice;
+  PriceEstimate? _estimate;
   bool _isCheckingPrice = false;
   bool _isSubmitting = false;
   String? _error;
@@ -41,8 +41,8 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
   void _onDescriptionChanged() {
     // If the customer changes the description after checking
     // the price, the old price is no longer valid.
-    if (_estimatedPrice != null) {
-      setState(() => _estimatedPrice = null);
+    if (_estimate != null) {
+      setState(() => _estimate = null);
     }
   }
 
@@ -68,34 +68,33 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
   }
 
   Future<void> _checkPrice() async {
-    if (_descController.text.trim().isEmpty) {
-      setState(() {
-        _error = 'Please describe the job first';
-      });
-      return;
+  if (_descController.text.trim().isEmpty) {
+    setState(() {
+      _error = 'Please describe the job first';
+    });
+    return;
+  }
+
+  setState(() {
+    _isCheckingPrice = true;
+    _error = null;
+  });
+
+  final estimate = await _bookingService.estimatePrice(
+    workerId: widget.workerId,
+    description: _descController.text.trim(),
+  );
+
+  if (!mounted) return;
+
+  setState(() {
+    _isCheckingPrice = false;
+    _estimate = estimate;
+
+    if (estimate == null) {
+      _error = 'Could not calculate a price right now. Please try again.';
     }
-
-    setState(() {
-      _isCheckingPrice = true;
-      _error = null;
-    });
-
-    final price = await _bookingService.estimatePrice(
-      workerId: widget.workerId,
-      description: _descController.text.trim(),
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      _isCheckingPrice = false;
-      _estimatedPrice = price;
-
-      if (price == null) {
-        _error =
-            'Could not calculate a price right now. Please try again.';
-      }
-    });
+  });
   }
 
   Future<void> _pickDateTime() async {
@@ -152,7 +151,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
       return;
     }
 
-    if (_estimatedPrice == null) {
+    if (_estimate == null) {
       setState(() {
         _error = 'Please check the price before booking';
       });
@@ -184,7 +183,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
       locationId: _locationId!,
       description: _descController.text.trim(),
       scheduledAt: _selectedDateTime!,
-      suggestedPrice: _estimatedPrice,
+      suggestedPrice: _estimate!.suggestedPrice,
     );
 
     if (!mounted) return;
@@ -252,7 +251,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
               ),
             ),
 
-            if (_estimatedPrice != null) ...[
+            if (_estimate != null) ...[
               const SizedBox(height: 16),
 
               Container(
@@ -274,7 +273,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'PKR ${_estimatedPrice!.toStringAsFixed(0)}',
+                      'PKR ${_estimate!.suggestedPrice.toStringAsFixed(0)}',
                       style: Theme.of(context)
                           .textTheme
                           .headlineMedium,
@@ -282,8 +281,38 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
                   ],
                 ),
               ),
-            ],
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _estimate!.urgencyLevel == 'critical' || _estimate!.urgencyLevel == 'high'
+                  ? Theme.of(context).colorScheme.errorContainer
+                  : Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _estimate!.urgencyLabel,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
 
+                    for (final note in _estimate!.riskNotes) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                         '• $note',
+                         style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+            
             const SizedBox(height: 20),
 
             if (_bookedSlots.isNotEmpty) ...[

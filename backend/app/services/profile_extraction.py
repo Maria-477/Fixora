@@ -1,4 +1,5 @@
 import re
+import random
 from sqlalchemy.orm import Session
 from app.models.skill import Skill
 
@@ -107,23 +108,52 @@ def _match_skill(db: Session, text: str) -> str | None:
 
     return None
 
+BIO_TEMPLATES = [
+    "{name} is a skilled {skill} based in {city}, with {years} years of hands-on experience.",
+    "With {years} years in the trade, {name} is an experienced {skill} serving {city} and nearby areas.",
+    "{name} brings {years} years of {skill} experience to every job in {city}.",
+    "A dependable {skill} from {city}, {name} has {years} years of professional experience.",
+]
 
-def _build_bio(name, skill, city, years):
-    parts = []
+BIO_TEMPLATES_NO_YEARS = [
+    "{name} is a {skill} based in {city}, ready to help with your project.",
+    "{name} works as a {skill} serving {city} and the surrounding area.",
+]
 
-    if name and skill:
-        parts.append(f"{name} has skills in {skill.lower()}")
+BIO_TEMPLATES_MINIMAL = [
+    "Experienced {skill} available in {city}.",
+    "Professional {skill} serving the {city} area.",
+]
 
-    elif skill:
-        parts.append(f"Experienced {skill.lower()}")
+def _build_bio(name: str | None, skill: str | None, city: str | None, years: int) -> str:
+    """
+    Mock AI bio generation (template-based).
+    """
+
+    skill_display = skill.lower() if skill else "tradesperson"
+
+    if name and city and years > 0:
+        template = random.choice(BIO_TEMPLATES)
+        return template.format(
+            name=name,
+            skill=skill_display,
+            city=city,
+            years=years
+        )
+
+    if name and city:
+        template = random.choice(BIO_TEMPLATES_NO_YEARS)
+        return template.format(
+            name=name,
+            skill=skill_display,
+            city=city
+        )
 
     if city:
-        parts.append(f"based in {city}")
+        template = random.choice(BIO_TEMPLATES_MINIMAL)
+        return template.format(
+            skill=skill_display,
+            city=city
+        )
 
-    if years:
-        parts.append(f"with {years} years of experience")
-
-    if parts:
-        return " ".join(parts).capitalize() + "."
-
-    return ""
+    return f"Professional {skill_display} ready to help with your project."

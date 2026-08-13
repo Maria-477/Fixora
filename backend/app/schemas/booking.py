@@ -1,7 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
 
-
 class CreateBookingRequest(BaseModel):
     worker_id: int
     location_id: int
@@ -32,3 +31,6 @@ class EstimatePriceRequest(BaseModel):
 class EstimatePriceResponse(BaseModel):
     suggested_price: float
     skill: str | None
+    urgency_level: str
+    urgency_label: str
+    risk_notes: list[str]
